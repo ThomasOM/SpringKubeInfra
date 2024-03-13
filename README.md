@@ -13,7 +13,7 @@ I recommend using `Postman` to test the endpoints.
 The gateway is exposed on port `30000`
 
 Endpoint | Method | Request | Response | Authorization Header | Description
-------------- | ------------- | ------------- | ------------- | -------------
+------------- | ------------- | ------------- | ------------- | ------------- | -------------
 `/users` | GET | `{}` |`[{"username": "thomas", "password": "12345"}]`| JWT returned from `/users/login` | Lists all users that have registered
 `/users/id` | GET | `{"id": 1}` | `{"username": "thomas", "password": "12345"}` | JWT returned from `/users/login` | Gets user data by their ID
 `/users/login` | POST | `{"username": "thomas" "password": "12345"}` | `"accessToken": JWT` | None | Logs in a user and returns a JWT access token
