@@ -21,7 +21,6 @@ import jakarta.persistence.Table;
     name = "users",
     indexes = {
         @Index(name = "user_username_index", columnList = "username", unique = true),
-        @Index(name = "users_email_index", columnList = "email", unique = true)
     }
 )
 public class User {

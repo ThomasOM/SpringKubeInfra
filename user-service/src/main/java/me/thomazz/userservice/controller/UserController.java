@@ -33,7 +33,7 @@ public class UserController {
 
     @PostMapping("register")
     public void registerUser(@RequestBody UserRegisterRequest request) {
-        this.service.registerUser(request.getUsername(), request.getEmail(), request.getPassword());
+        this.service.registerUser(request.getUsername(), request.getPassword());
     }
 
     @PostMapping("login")

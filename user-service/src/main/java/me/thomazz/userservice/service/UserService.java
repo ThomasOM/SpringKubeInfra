@@ -2,7 +2,6 @@ package me.thomazz.userservice.service;
 
 import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.entities.UserDto;
-import me.thomazz.userservice.exception.UserEmailAlreadyExistsException;
 import me.thomazz.userservice.exception.UserInvalidPasswordException;
 import me.thomazz.userservice.exception.UserNotFoundException;
 import me.thomazz.userservice.exception.UsernameAlreadyExistsException;
@@ -34,13 +33,9 @@ public class UserService {
             .orElseThrow(UserNotFoundException::new);
     }
 
-    public void registerUser(String username, String email, String password) {
+    public void registerUser(String username, String password) {
         if (this.repository.findByUsername(username).isPresent()) {
             throw new UsernameAlreadyExistsException();
-        }
-
-        if (this.repository.findByEmail(username).isPresent()) {
-            throw new UserEmailAlreadyExistsException();
         }
 
         User user = User.builder()
