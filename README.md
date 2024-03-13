@@ -1,5 +1,5 @@
 # SpringKubeInfra
-Barebones Spring Java infrastructure for a simple user system and authentication using Json Web Tokens in Spring Cloud Gateway.
+Barebones Spring Boot infrastructure for a simple user system and authentication using Json Web Tokens in Spring Cloud Gateway.
 
 # How to run
 Before you start, make sure you have docker and a kubernetes distribution installed on your machine.
