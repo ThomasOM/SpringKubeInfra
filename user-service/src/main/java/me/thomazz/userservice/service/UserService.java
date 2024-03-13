@@ -45,7 +45,6 @@ public class UserService {
 
         User user = User.builder()
             .username(username)
-            .email(email)
             .password(this.passwordEncoder.encode(password))
             .build();
 
