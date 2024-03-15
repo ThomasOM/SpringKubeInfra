@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -21,7 +22,6 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 
 @RefreshScope
 @Component
@@ -43,13 +43,13 @@ public class AuthenticationFilter implements GatewayFilter {
         ServerHttpResponse response = exchange.getResponse();
 
         if (this.isSecured(request)) {
-            if (!request.getHeaders().containsKey("Authorization")) {
+            if (!request.getCookies().containsKey("spring_kube_infra_login_token")) {
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return response.setComplete();
             }
 
-            List<String> authorization = request.getHeaders().getOrEmpty("Authorization");
-            String accessToken = authorization.get(0);
+            HttpCookie cookie = request.getCookies().get("spring_kube_infra_login_token").get(0);
+            String accessToken = cookie.getValue();
 
             if (this.isExpired(accessToken)) {
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
