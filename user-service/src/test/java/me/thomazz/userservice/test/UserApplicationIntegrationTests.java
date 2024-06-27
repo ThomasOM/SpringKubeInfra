@@ -1,6 +1,7 @@
 package me.thomazz.userservice.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.UserApplication;
 import me.thomazz.userservice.dto.UserByIdRequest;
 import me.thomazz.userservice.dto.UserDto;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
@@ -33,19 +35,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @SpringBootTest(classes = UserApplication.class)
-@TestPropertySource(locations = "classpath:application.yml")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserApplicationIntegrationTests {
-    @Autowired private MockMvc mvc;
-    @Autowired private ObjectMapper mapper;
-    @Autowired private UserRepository repository;
-    @Autowired private PasswordEncoder encoder;
+    private final MockMvc mvc;
+    private final ObjectMapper mapper;
+    private final UserRepository repository;
+    private final PasswordEncoder encoder;
 
     @Test
     @Order(1)
     @DisplayName("User registration - Valid")
     public void userRegister_givenValidRequest_shouldReturnOk() throws Exception {
-        UserRegisterRequest request = UserRegisterRequest.builder().username("test").password("testing").build();
+        UserRegisterRequest request = UserRegisterRequest.builder()
+            .username("test")
+            .password("testing")
+            .build();
 
         this.mvc.perform(
                 post("/api/v1/users/register")
@@ -66,7 +71,10 @@ public class UserApplicationIntegrationTests {
                 .build()
         );
 
-        UserRegisterRequest request = UserRegisterRequest.builder().username("test").password("testing").build();
+        UserRegisterRequest request = UserRegisterRequest.builder()
+            .username("test")
+            .password("testing")
+            .build();
 
         this.mvc.perform(
                 post("/api/v1/users/register")
@@ -87,7 +95,10 @@ public class UserApplicationIntegrationTests {
                 .build()
         );
 
-        UserLoginRequest request = UserLoginRequest.builder().username("test").password("testing").build();
+        UserLoginRequest request = UserLoginRequest.builder()
+            .username("test")
+            .password("testing")
+            .build();
 
         this.mvc.perform(
                 post("/api/v1/users/login")
@@ -109,7 +120,10 @@ public class UserApplicationIntegrationTests {
                 .build()
         );
 
-        UserLoginRequest request = UserLoginRequest.builder().username("test").password("1234").build();
+        UserLoginRequest request = UserLoginRequest.builder()
+            .username("test")
+            .password("1234")
+            .build();
 
         this.mvc.perform(
                 post("/api/v1/users/login")
@@ -123,7 +137,10 @@ public class UserApplicationIntegrationTests {
     @Order(5)
     @DisplayName("User login - Not found")
     public void userLogin_givenInvalidRequest_shouldReturnNotFound() throws Exception {
-        UserLoginRequest request = UserLoginRequest.builder().username("test").password("testing").build();
+        UserLoginRequest request = UserLoginRequest.builder()
+            .username("test")
+            .password("testing")
+            .build();
 
         this.mvc.perform(
                 post("/api/v1/users/login")
