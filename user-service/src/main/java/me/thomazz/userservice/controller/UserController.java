@@ -1,13 +1,12 @@
 package me.thomazz.userservice.controller;
 
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import me.thomazz.userservice.entities.UserByIdRequest;
-import me.thomazz.userservice.entities.UserDto;
-import me.thomazz.userservice.entities.UserLoginRequest;
-import me.thomazz.userservice.entities.UserRegisterRequest;
+import me.thomazz.userservice.dto.UserByIdRequest;
+import me.thomazz.userservice.dto.UserDto;
+import me.thomazz.userservice.dto.UserLoginRequest;
+import me.thomazz.userservice.dto.UserRegisterRequest;
 import me.thomazz.userservice.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,7 @@ import java.time.Duration;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService service;

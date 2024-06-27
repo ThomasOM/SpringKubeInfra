@@ -1,4 +1,4 @@
-package me.thomazz.userservice.model;
+package me.thomazz.userservice.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

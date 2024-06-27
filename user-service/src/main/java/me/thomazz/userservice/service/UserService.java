@@ -1,11 +1,11 @@
 package me.thomazz.userservice.service;
 
 import lombok.RequiredArgsConstructor;
-import me.thomazz.userservice.entities.UserDto;
+import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.exception.UserInvalidPasswordException;
 import me.thomazz.userservice.exception.UserNotFoundException;
 import me.thomazz.userservice.exception.UsernameAlreadyExistsException;
-import me.thomazz.userservice.model.User;
+import me.thomazz.userservice.entities.User;
 import me.thomazz.userservice.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;

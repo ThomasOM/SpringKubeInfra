@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test
+    username: sa
+    password: sa
+    hibernate:
+      ddl-auto: create
+      dialect: org.hibernate.dialect.H2Dialect
+jwt:
+  secret: "QZiS4/mo/zmH8X90pTL5WQ9z5ogDmCILLiZfmcyPug4=" # Random 32 byte base64
+  expiration: PT15M
