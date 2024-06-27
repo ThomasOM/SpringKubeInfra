@@ -63,7 +63,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(2)
     @DisplayName("User registration - Conflict")
-    public void userLogin_givenInvalidRequest_shouldReturnConflict() throws Exception {
+    public void userRegister_givenInvalidRequest_shouldReturnConflict() throws Exception {
         this.repository.save(
             User.builder()
                 .username("test")
