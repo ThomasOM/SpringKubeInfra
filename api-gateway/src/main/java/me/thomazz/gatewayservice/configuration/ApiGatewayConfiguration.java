@@ -17,7 +17,7 @@ public class ApiGatewayConfiguration {
         return builder.routes()
             .route(
                 "user-service",
-                route -> route.path("/users/**")
+                route -> route.path("api/v1/users/**")
                     .filters(filter -> filter.filter(this.filter))
                     .uri("http://user-service-svc")
             )
