@@ -6,21 +6,22 @@ import me.thomazz.userservice.UserApplication;
 import me.thomazz.userservice.dto.UserByIdRequest;
 import me.thomazz.userservice.dto.UserDeleteByIdRequest;
 import me.thomazz.userservice.dto.UserDto;
+import me.thomazz.userservice.dto.UserGetAllRequest;
 import me.thomazz.userservice.dto.UserLoginRequest;
 import me.thomazz.userservice.dto.UserRegisterRequest;
 import me.thomazz.userservice.entities.User;
 import me.thomazz.userservice.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -32,16 +33,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-@ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc
 @SpringBootTest(classes = UserApplication.class)
+@AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserApplicationTests {
     private final MockMvc mvc;
     private final ObjectMapper mapper;
     private final UserRepository repository;
     private final PasswordEncoder encoder;
+    private final int pageSizeLimit;
 
     @Test
     @Order(1)
@@ -154,14 +156,45 @@ public class UserApplicationTests {
     @Order(6)
     @DisplayName("Get all users - No users")
     public void testUserGetAllValidReturnsOkEmpty() throws Exception {
-        this.mvc.perform(get("/api/v1/users"))
+        UserGetAllRequest request = UserGetAllRequest.builder()
+            .pageNumber(0)
+            .pageSize(10)
+            .build();
+
+        this.mvc.perform(
+                get("/api/v1/users")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.mapper.writeValueAsString(request))
+            )
             .andExpect(status().isOk());
     }
 
     @Test
     @Order(7)
+    @DisplayName("Get all users - Page size limit exceeded")
+    public void testUserGetAllInvalidReturnsBadRequest() throws Exception {
+        UserGetAllRequest request = UserGetAllRequest.builder()
+            .pageNumber(0)
+            .pageSize(this.pageSizeLimit + 1)
+            .build();
+
+        this.mvc.perform(
+                get("/api/v1/users")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.mapper.writeValueAsString(request))
+            )
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(8)
     @DisplayName("Get all users - Valid")
     public void testUserGetAllValidReturnsOk() throws Exception {
+        UserGetAllRequest request = UserGetAllRequest.builder()
+            .pageNumber(0)
+            .pageSize(1)
+            .build();
+
         this.repository.save(
             User.builder()
                 .id(1L)
@@ -177,13 +210,17 @@ public class UserApplicationTests {
                 .build()
         );
 
-        this.mvc.perform(get("/api/v1/users"))
+        this.mvc.perform(
+                get("/api/v1/users")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.mapper.writeValueAsString(request))
+            )
             .andExpect(status().isOk())
             .andExpect(content().json(this.mapper.writeValueAsString(response)));
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     @DisplayName("Get user by id - Valid")
     public void testUserGetByIdValidReturnsOk() throws Exception {
         this.repository.save(
@@ -213,7 +250,7 @@ public class UserApplicationTests {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     @DisplayName("Get user by id - Not found")
     public void testGetUserByIdInvalidReturnsNotFound() throws Exception {
         UserByIdRequest request = UserByIdRequest.builder()
@@ -229,7 +266,7 @@ public class UserApplicationTests {
     }
 
     @Test
-    @Order(10)
+    @Order(11)
     @DisplayName("Delete user by id - Valid")
     public void testUserDeleteByIdValidReturnsOk() throws Exception {
         this.repository.save(
@@ -253,7 +290,7 @@ public class UserApplicationTests {
     }
 
     @Test
-    @Order(11)
+    @Order(12)
     @DisplayName("Delete user by id - Not found")
     public void testDeleteUserByIdInvalidReturnsNotFound() throws Exception {
         UserDeleteByIdRequest request = UserDeleteByIdRequest.builder()

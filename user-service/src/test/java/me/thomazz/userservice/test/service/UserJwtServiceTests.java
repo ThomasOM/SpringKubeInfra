@@ -7,7 +7,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import me.thomazz.userservice.service.UserJwtService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,6 +21,7 @@ import java.time.ZoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
+@TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public class UserJwtServiceTests {
     private final String secret = "EOwOOG2hds94sChfQqm92yQlahx02KOPPbVEw4SQuLY=";
     private final UserJwtService userService = new UserJwtService(

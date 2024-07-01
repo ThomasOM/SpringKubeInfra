@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.exception.UserInvalidPasswordException;
 import me.thomazz.userservice.exception.UserNotFoundException;
+import me.thomazz.userservice.exception.UserPageSizeLimitExceededException;
 import me.thomazz.userservice.exception.UsernameAlreadyExistsException;
 import me.thomazz.userservice.entities.User;
 import me.thomazz.userservice.repository.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +23,14 @@ public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final int pageSizeLimit;
 
-    public List<UserDto> getAllUsers() {
-        return this.repository.findAll().stream()
+    public List<UserDto> getAllUsers(Pageable pageable) {
+        if (pageable.getPageSize() > this.pageSizeLimit) {
+            throw new UserPageSizeLimitExceededException();
+        }
+
+        return this.repository.findAll(pageable).stream()
             .map(user -> this.modelMapper.map(user, UserDto.class))
             .toList();
     }

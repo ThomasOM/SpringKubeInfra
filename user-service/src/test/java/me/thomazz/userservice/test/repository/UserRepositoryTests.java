@@ -5,8 +5,10 @@ import me.thomazz.userservice.entities.User;
 import me.thomazz.userservice.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -22,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserRepositoryTests {
     private final UserRepository userRepository;

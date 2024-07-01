@@ -7,6 +7,7 @@ spring:
         locator:
           enabled:true
 jwt:
-  secret: ${JWT_SECRET}
+  secret: "QZiS4/mo/zmH8X90pTL5WQ9z5ogDmCILLiZfmcyPug4=" # Random 32 byte base64
+  expiration: PT15M
 service:
-  uri: "http://user-service-svc"
+  uri: "http://localhost:8080"

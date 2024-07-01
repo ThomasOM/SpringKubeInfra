@@ -1,31 +1,44 @@
 package me.thomazz.userservice.test.service;
 
+import me.thomazz.userservice.config.UserConfiguration;
 import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.entities.User;
+import me.thomazz.userservice.exception.UserPageSizeLimitExceededException;
 import me.thomazz.userservice.repository.UserRepository;
 import me.thomazz.userservice.service.UserJwtService;
 import me.thomazz.userservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = UserConfiguration.class)
+@TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public class UserServiceTests {
     @Mock
     private UserJwtService jwtService;
@@ -39,18 +52,30 @@ public class UserServiceTests {
     @Spy
     private ModelMapper modelMapper = new ModelMapper();
 
-    @InjectMocks
+    @Autowired
+    private int pageSizeLimit;
+
     private UserService userService;
 
     @BeforeEach
     public void setup() {
-        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+        this.userService = new UserService(
+            this.jwtService,
+            this.userRepository,
+            this.passwordEncoder,
+            this.modelMapper,
+            this.pageSizeLimit
+        );
     }
 
     @Test
     @Order(1)
-    @DisplayName("Get All Users")
+    @DisplayName("Get all users")
     public void testGetAllUsers() {
+        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+
+        Pageable pageable = PageRequest.of(0, 2);
+
         User user1 = User.builder()
             .id(1L)
             .username("test1")
@@ -63,9 +88,9 @@ public class UserServiceTests {
             .password(this.passwordEncoder.encode("testing2"))
             .build();
 
-        when(this.userRepository.findAll()).thenReturn(List.of(user1, user2));
+        when(this.userRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(user1, user2)));
 
-        List<UserDto> allUsers = this.userService.getAllUsers();
+        List<UserDto> allUsers = this.userService.getAllUsers(pageable);
 
         UserDto expected1 = UserDto.builder()
             .id(1L)
@@ -82,8 +107,20 @@ public class UserServiceTests {
 
     @Test
     @Order(2)
-    @DisplayName("Get User By Id")
+    @DisplayName("Get all users page size limit exceeded")
+    public void testGetAllUsersPageSizeLimitExceeded() {
+        Pageable pageable = PageRequest.of(0, this.pageSizeLimit + 1);
+
+        assertThatExceptionOfType(UserPageSizeLimitExceededException.class)
+            .isThrownBy(() -> this.userService.getAllUsers(pageable));
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("Get user by Id")
     public void testGetUserById() {
+        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+
         User user = User.builder()
             .id(1L)
             .username("test")
@@ -103,9 +140,11 @@ public class UserServiceTests {
     }
 
     @Test
-    @Order(3)
-    @DisplayName("Register User")
+    @Order(4)
+    @DisplayName("Register user")
     public void testRegisterUser() {
+        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+
         this.userService.registerUser("test", "testing");
 
         User expected = User.builder()
@@ -117,9 +156,11 @@ public class UserServiceTests {
     }
 
     @Test
-    @Order(4)
-    @DisplayName("Login User")
+    @Order(5)
+    @DisplayName("Login user")
     public void testLoginUser() {
+        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+
         User user = User.builder()
             .id(1L)
             .username("test")
@@ -136,9 +177,11 @@ public class UserServiceTests {
     }
 
     @Test
-    @Order(5)
-    @DisplayName("Delete User")
+    @Order(6)
+    @DisplayName("Delete user")
     public void testDeleteUser() {
+        when(this.passwordEncoder.encode(any())).thenAnswer(invocation -> invocation.getArguments()[0]);
+
         User user = User.builder()
             .id(1L)
             .username("test")

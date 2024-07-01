@@ -24,4 +24,9 @@ public class UserConfiguration {
     public Clock clock() {
         return Clock.systemUTC();
     }
+
+    @Bean("pageSizeLimit")
+    public int pageSizeLimit() {
+        return 100;
+    }
 }

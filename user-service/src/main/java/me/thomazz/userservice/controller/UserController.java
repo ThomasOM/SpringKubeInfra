@@ -6,9 +6,11 @@ import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.dto.UserByIdRequest;
 import me.thomazz.userservice.dto.UserDeleteByIdRequest;
 import me.thomazz.userservice.dto.UserDto;
+import me.thomazz.userservice.dto.UserGetAllRequest;
 import me.thomazz.userservice.dto.UserLoginRequest;
 import me.thomazz.userservice.dto.UserRegisterRequest;
 import me.thomazz.userservice.service.UserService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +29,8 @@ public class UserController {
     private final UserService service;
 
     @GetMapping
-    public List<UserDto> getAllUsers() {
-        return this.service.getAllUsers();
+    public List<UserDto> getAllUsers(@RequestBody UserGetAllRequest request) {
+        return this.service.getAllUsers(PageRequest.of(request.getPageNumber(), request.getPageSize()));
     }
 
     @GetMapping("id")
