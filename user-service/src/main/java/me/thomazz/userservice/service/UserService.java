@@ -10,6 +10,7 @@ import me.thomazz.userservice.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ public class UserService {
             .orElseThrow(UserNotFoundException::new);
     }
 
+    @Transactional
     public void registerUser(String username, String password) {
         if (this.repository.findByUsername(username).isPresent()) {
             throw new UsernameAlreadyExistsException();
@@ -46,6 +48,15 @@ public class UserService {
         this.repository.save(user);
     }
 
+    @Transactional
+    public void deleteUser(long id) {
+        if (this.repository.findById(id).isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        this.repository.deleteById(id);
+    }
+
     public String loginUser(String username, String password) {
         User user = this.repository.findByUsername(username).orElseThrow(UserNotFoundException::new);
 
@@ -53,6 +64,6 @@ public class UserService {
             throw new UserInvalidPasswordException();
         }
 
-        return this.jwtService.generateToken(user.getId().toString());
+        return this.jwtService.generateToken(user.getId());
     }
 }

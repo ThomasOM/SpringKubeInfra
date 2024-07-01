@@ -4,11 +4,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.dto.UserByIdRequest;
+import me.thomazz.userservice.dto.UserDeleteByIdRequest;
 import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.dto.UserLoginRequest;
 import me.thomazz.userservice.dto.UserRegisterRequest;
 import me.thomazz.userservice.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +41,11 @@ public class UserController {
         this.service.registerUser(request.getUsername(), request.getPassword());
     }
 
+    @DeleteMapping("id")
+    public void deleteUserById(@RequestBody UserDeleteByIdRequest request) {
+        this.service.deleteUser(request.getId());
+    }
+
     @PostMapping("login")
     public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest loginRequest, HttpServletResponse response) {
         String token = this.service.loginUser(loginRequest.getUsername(), loginRequest.getPassword());
@@ -47,8 +54,7 @@ public class UserController {
         cookie.setHttpOnly(true);
         cookie.setMaxAge((int) Duration.ofMinutes(15L).toSeconds()); // Cookie expires in 15 minutes
 
-        // Enable this when using HTTPS
-        // cookie.setSecure(true);
+        // cookie.setSecure(true); // Enable this when using HTTPS
 
         response.addCookie(cookie);
         return ResponseEntity.ok().build();

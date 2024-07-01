@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import me.thomazz.userservice.UserApplication;
 import me.thomazz.userservice.dto.UserByIdRequest;
+import me.thomazz.userservice.dto.UserDeleteByIdRequest;
 import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.dto.UserLoginRequest;
 import me.thomazz.userservice.dto.UserRegisterRequest;
@@ -16,16 +17,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(classes = UserApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class UserApplicationIntegrationTests {
+public class UserApplicationTests {
     private final MockMvc mvc;
     private final ObjectMapper mapper;
     private final UserRepository repository;
@@ -46,7 +46,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(1)
     @DisplayName("User registration - Valid")
-    public void userRegister_givenValidRequest_shouldReturnOk() throws Exception {
+    public void testRegisterUserValidReturnsOk() throws Exception {
         UserRegisterRequest request = UserRegisterRequest.builder()
             .username("test")
             .password("testing")
@@ -63,7 +63,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(2)
     @DisplayName("User registration - Conflict")
-    public void userRegister_givenInvalidRequest_shouldReturnConflict() throws Exception {
+    public void testRegisterUserInvalidReturnsConflict() throws Exception {
         this.repository.save(
             User.builder()
                 .username("test")
@@ -87,7 +87,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(3)
     @DisplayName("User login - Valid")
-    public void userLogin_givenValidRequest_shouldReturnOkAndCookie() throws Exception {
+    public void testUserLoginValidReturnsOkAndCookie() throws Exception {
         this.repository.save(
             User.builder()
                 .username("test")
@@ -112,7 +112,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(4)
     @DisplayName("User login - Unauthorized")
-    public void userLogin_givenInvalidRequest_shouldReturnUnauthorized() throws Exception {
+    public void testUserLoginInvalidReturnsUnauthorized() throws Exception {
         this.repository.save(
             User.builder()
                 .username("test")
@@ -136,7 +136,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(5)
     @DisplayName("User login - Not found")
-    public void userLogin_givenInvalidRequest_shouldReturnNotFound() throws Exception {
+    public void testUserLoginInvalidReturnsNotFound() throws Exception {
         UserLoginRequest request = UserLoginRequest.builder()
             .username("test")
             .password("testing")
@@ -153,7 +153,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(6)
     @DisplayName("Get all users - No users")
-    public void userGetAll_givenValidRequest_shouldReturnOk() throws Exception {
+    public void testUserGetAllValidReturnsOkEmpty() throws Exception {
         this.mvc.perform(get("/api/v1/users"))
             .andExpect(status().isOk());
     }
@@ -161,7 +161,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(7)
     @DisplayName("Get all users - Valid")
-    public void userGetAll_givenValidRequest_shouldReturnOkAndUsers() throws Exception {
+    public void testUserGetAllValidReturnsOk() throws Exception {
         this.repository.save(
             User.builder()
                 .id(1L)
@@ -185,7 +185,7 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(8)
     @DisplayName("Get user by id - Valid")
-    public void userGetById_givenValidRequest_shouldReturnOkAndUser() throws Exception {
+    public void testUserGetByIdValidReturnsOk() throws Exception {
         this.repository.save(
             User.builder()
                 .id(1L)
@@ -215,13 +215,53 @@ public class UserApplicationIntegrationTests {
     @Test
     @Order(9)
     @DisplayName("Get user by id - Not found")
-    public void userGetById_givenInvalidRequest_shouldReturnNotFound() throws Exception {
+    public void testGetUserByIdInvalidReturnsNotFound() throws Exception {
         UserByIdRequest request = UserByIdRequest.builder()
             .id(1L)
             .build();
 
         this.mvc.perform(
                 get("/api/v1/users/id")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.mapper.writeValueAsString(request))
+            )
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("Delete user by id - Valid")
+    public void testUserDeleteByIdValidReturnsOk() throws Exception {
+        this.repository.save(
+            User.builder()
+                .id(1L)
+                .username("test")
+                .password(this.encoder.encode("testing"))
+                .build()
+        );
+
+        UserDeleteByIdRequest request = UserDeleteByIdRequest.builder()
+            .id(1L)
+            .build();
+
+        this.mvc.perform(
+                delete("/api/v1/users/id")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(this.mapper.writeValueAsString(request))
+            )
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("Delete user by id - Not found")
+    public void testDeleteUserByIdInvalidReturnsNotFound() throws Exception {
+        UserDeleteByIdRequest request = UserDeleteByIdRequest.builder()
+            .id(1L)
+            .build();
+
+        this.mvc.perform(
+                delete("/api/v1/users/id")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(this.mapper.writeValueAsString(request))
             )
