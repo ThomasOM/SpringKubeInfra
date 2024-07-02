@@ -1,4 +1,4 @@
-package me.thomazz.userservice.config;
+package me.thomazz.userservice.configuration;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

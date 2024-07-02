@@ -1,6 +1,6 @@
 package me.thomazz.userservice.test.service;
 
-import me.thomazz.userservice.config.UserConfiguration;
+import me.thomazz.userservice.configuration.UserConfiguration;
 import me.thomazz.userservice.dto.UserDto;
 import me.thomazz.userservice.entities.User;
 import me.thomazz.userservice.exception.UserPageSizeLimitExceededException;
