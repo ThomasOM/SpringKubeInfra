@@ -9,5 +9,10 @@ spring:
 jwt:
   secret: "QZiS4/mo/zmH8X90pTL5WQ9z5ogDmCILLiZfmcyPug4=" # Random 32 byte base64
   expiration: PT15M
-service:
-  uri: "http://localhost:8080"
+route:
+  path:
+    secured:
+      - "/api/v1/users/**"
+    allowed:
+      - "/api/v1/users/register"
+      - "/api/v1/users/login"

@@ -1,27 +1,28 @@
 package me.thomazz.gatewayservice.test;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import me.thomazz.gatewayservice.ApiGatewayApplication;
+import me.thomazz.gatewayservice.configuration.ApiGatewayConfiguration;
+import me.thomazz.gatewayservice.test.configuration.ApiGatewayTestConfiguration;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.security.Key;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Map;
 
@@ -29,43 +30,43 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
-@SpringBootTest(classes = ApiGatewayApplication.class)
-@AutoConfigureWireMock
+@SpringBootTest(
+    classes = { ApiGatewayApplication.class, ApiGatewayConfiguration.class, ApiGatewayTestConfiguration.class },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {"service.user-service-uri=http://localhost:${wiremock.server.port}"}
+)
+@AutoConfigureWireMock(port = 0)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Disabled("WIP")
 public class ApiGatewayApplicationTests {
-    private final String port;
     private final Key jwtKey;
     private final Duration jwtExpiration;
     private final Clock clock;
+    private final WebTestClient webTestClient;
 
-    private WebTestClient webTestClient;
-
+    @Autowired
     public ApiGatewayApplicationTests(
-        @Value("${wiremock.server.port}") String port,
         @Value("${jwt.secret}") String jwtSecret,
-        @Value("${jwt.expiration}") Duration jwtExpiration
+        @Value("${jwt.expiration}") Duration jwtExpiration,
+        Clock clock,
+        WebTestClient webTestClient
     ) {
-        this.port = port;
         this.jwtKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
         this.jwtExpiration = jwtExpiration;
-        this.clock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-    }
-
-    @BeforeEach
-    public void setup() {
-        this.webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + this.port).build();
+        this.clock = clock;
+        this.webTestClient = webTestClient;
     }
 
     @Test
     @Order(1)
-    @DisplayName("Unprotected route - Valid")
-    public void testUnprotectedRouteValidReturnsOk() {
-        stubFor(get("/test").willReturn(ok()));
+    @DisplayName("Register route - Valid")
+    public void testRegisterRouteValidReturnsOk() {
+        stubFor(get(urlEqualTo("/api/v1/users/register")).willReturn(ok()));
 
         this.webTestClient.get()
-            .uri("/test")
+            .uri("/api/v1/users/register")
             .exchange()
             .expectStatus().isOk();
     }
@@ -74,7 +75,7 @@ public class ApiGatewayApplicationTests {
     @Order(2)
     @DisplayName("Login route - Valid")
     public void testLoginRouteValidReturnsOkAndCookie() {
-        stubFor(get("/api/v1/users/login")
+        stubFor(get(urlEqualTo("/api/v1/users/login"))
             .willReturn(
                 aResponse()
                     .withHeader("Set-Cookie", "spring_kube_infra_login_token=token")
@@ -91,9 +92,9 @@ public class ApiGatewayApplicationTests {
 
     @Test
     @Order(3)
-    @DisplayName("Protected route - Valid")
-    public void test() {
-        stubFor(get("/api/v1/users/id").willReturn(ok()));
+    @DisplayName("Protected route - Unauthorized")
+    public void testProtectedRouteInvalidReturnsUnauthorized() {
+        stubFor(get(urlEqualTo("/api/v1/users")).willReturn(ok()));
 
         long userId = 1L;
         String jwtToken = Jwts.builder()
@@ -105,9 +106,21 @@ public class ApiGatewayApplicationTests {
             .compact();
 
         this.webTestClient.get()
-            .uri("/api/v1/users/id")
-            .cookie("spring_kube_infra_login_tok", jwtToken)
+            .uri("/api/v1/users")
+            .cookie("spring_kube_infra_login_token", jwtToken)
             .exchange()
             .expectStatus().isOk();
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Protected route - Valid")
+    public void testProtectedRouteValidReturnsOk() {
+        stubFor(get(urlEqualTo("/api/v1/users")).willReturn(ok()));
+
+        this.webTestClient.get()
+            .uri("/api/v1/users")
+            .exchange()
+            .expectStatus().isUnauthorized();
     }
 }

@@ -5,7 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
+import me.thomazz.gatewayservice.configuration.ApiGatewayRoutePathConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -13,28 +13,44 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPattern;
+import org.springframework.web.util.pattern.PathPatternParser;
 import reactor.core.publisher.Mono;
 
-import javax.crypto.SecretKey;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RefreshScope
 @Component
-@RequiredArgsConstructor
 public class AuthenticationFilter implements GatewayFilter {
+    private final Clock clock;
+    private final List<PathPattern> allowedPatterns;
     private JwtParser jwtParser;
 
     @Autowired
     public AuthenticationFilter(
-        @Value("${jwt.secret}") String secret
+        Clock clock,
+        ApiGatewayRoutePathConfigurationProperties routeProperties,
+        @Value("${jwt.secret}") String jwtSecret
     ) {
-        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.jwtParser = Jwts.parserBuilder().setSigningKey(key).build();
+        this.clock = clock;
+
+        PathPatternParser parser = new PathPatternParser();
+        this.allowedPatterns = routeProperties.getAllowed().stream()
+            .map(parser::parse)
+            .collect(Collectors.toList());
+
+        this.jwtParser = Jwts.parserBuilder()
+            .setClock(() -> Date.from(this.clock.instant()))
+            .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+            .build();
     }
 
     @Override
@@ -61,14 +77,14 @@ public class AuthenticationFilter implements GatewayFilter {
     }
 
     private boolean isSecured(ServerHttpRequest request) {
-        String path = request.getURI().getPath();
-        return !path.contains("/users/register") && !path.contains("/users/login");
+        PathContainer path = PathContainer.parsePath(request.getURI().getPath());
+        return this.allowedPatterns.stream().noneMatch(pattern -> pattern.matches(path));
     }
 
     public boolean isExpired(String accessToken) {
         try {
             Claims accessClaims = this.jwtParser.parseClaimsJws(accessToken).getBody();
-            Date now = Date.from(Instant.now());
+            Date now = Date.from(this.clock.instant());
             return accessClaims.getExpiration().before(now);
         } catch (JwtException ignored) {
             return true;

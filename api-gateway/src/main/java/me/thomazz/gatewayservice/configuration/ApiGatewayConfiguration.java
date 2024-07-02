@@ -8,22 +8,31 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+
 @Configuration
 public class ApiGatewayConfiguration {
     @Autowired
     private AuthenticationFilter filter;
-    @Value("${service.uri}")
-    private String serviceUri;
+    @Value("${service.user-service-uri}")
+    private String userServiceUri;
 
     @Bean
-    public RouteLocator routeLocator(RouteLocatorBuilder builder) {
+    public RouteLocator routeLocator(RouteLocatorBuilder builder, ApiGatewayRoutePathConfigurationProperties routeProperties) {
+        String[] secured = routeProperties.getSecured().toArray(String[]::new);
+
         return builder.routes()
             .route(
                 "user-service",
-                route -> route.path("api/v1/users/**")
+                route -> route.path(secured)
                     .filters(filter -> filter.filter(this.filter))
-                    .uri(this.serviceUri)
+                    .uri(this.userServiceUri)
             )
             .build();
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
     }
 }

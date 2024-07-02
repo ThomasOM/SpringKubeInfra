@@ -8,5 +8,12 @@ spring:
           enabled:true
 jwt:
   secret: ${JWT_SECRET}
+route:
+  path:
+    secured:
+      - "/api/v1/users/**"
+    allowed:
+      - "/api/v1/users/register"
+      - "/api/v1/users/login"
 service:
-  uri: "http://user-service-svc"
+  user-service-uri: "http://user-service-svc"

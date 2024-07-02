@@ -15,11 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,9 +46,6 @@ public class UserServiceTests {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Spy
-    private ModelMapper modelMapper = new ModelMapper();
-
     @Autowired
     private int pageSizeLimit;
 
@@ -63,7 +57,7 @@ public class UserServiceTests {
             this.jwtService,
             this.userRepository,
             this.passwordEncoder,
-            this.modelMapper,
+            new ModelMapper(),
             this.pageSizeLimit
         );
     }
